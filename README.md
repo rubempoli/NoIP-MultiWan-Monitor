@@ -1,15 +1,16 @@
-# noip-dualwan-monitor
+# noip-multiwan-monitor
 
 Author: Rubem Swensson  
 Co-Authors: ChatGPT + Codex
 
 ## Changelog
 
+- 2026-05-17: Renamed visible project references to multi-WAN.
 - 2026-05-17: Initial GitHub-ready project structure, monitor, API, systemd units, installer, and documentation.
 
 ## Overview
 
-`noip-dualwan-monitor` monitors the current public IP of a dual-WAN network and compares it with the IP currently published in DNS for a No-IP hostname. It is designed for a Debian host running No-IP DUC 3.x and a router where the active WAN can change during failover.
+`noip-multiwan-monitor` monitors the current public IP of a multi-WAN network and compares it with the IP currently published in DNS for a No-IP hostname. It is designed for a Debian host running No-IP DUC 3.x and a router where the active WAN can change during failover.
 
 The first version focuses on reliable observation:
 

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Conservative installer for noip-dualwan-monitor
+# Conservative installer for noip-multiwan-monitor
 # Author: Rubem Swensson
 # Co-Authors: ChatGPT + Codex
 # Changelog:
+# - 2026-05-17: Renamed visible project references to multi-WAN.
 # - 2026-05-17: Initial installer with backups and no blind overwrite of existing runtime files.
 
 set -euo pipefail

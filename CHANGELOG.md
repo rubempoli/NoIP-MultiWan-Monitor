@@ -5,6 +5,7 @@ Co-Authors: ChatGPT + Codex
 
 ## 0.1.0 - 2026-05-17
 
+- Renamed visible project references to multi-WAN.
 - Created initial GitHub-ready project structure.
 - Added configurable periodic monitor.
 - Added consolidated status file with public IP, DNS IP, DNS status, ISP, and timestamps.

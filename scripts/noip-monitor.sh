@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# noip-dualwan-monitor periodic monitor
+# noip-multiwan-monitor periodic monitor
 # Author: Rubem Swensson
 # Co-Authors: ChatGPT + Codex
 # Changelog:
+# - 2026-05-17: Renamed visible project references to multi-WAN.
 # - 2026-05-17: Initial monitor with public IP, DNS consistency, ISP detection, history, and optional DUC restart.
 
 set -euo pipefail

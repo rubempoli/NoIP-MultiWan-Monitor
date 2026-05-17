@@ -1,11 +1,12 @@
-# noip-dualwan-monitor systemd service
+# noip-multiwan-monitor systemd service
 # Author: Rubem Swensson
 # Co-Authors: ChatGPT + Codex
 # Changelog:
+# - 2026-05-17: Renamed visible project references to multi-WAN.
 # - 2026-05-17: Initial oneshot service for periodic monitor execution.
 
 [Unit]
-Description=No-IP Dual-WAN Monitor
+Description=No-IP Multi-WAN Monitor
 After=network-online.target
 Wants=network-online.target
 

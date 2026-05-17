@@ -1,11 +1,12 @@
-# noip-dualwan-monitor systemd timer
+# noip-multiwan-monitor systemd timer
 # Author: Rubem Swensson
 # Co-Authors: ChatGPT + Codex
 # Changelog:
+# - 2026-05-17: Renamed visible project references to multi-WAN.
 # - 2026-05-17: Initial one-minute timer.
 
 [Unit]
-Description=Run No-IP Dual-WAN Monitor every minute
+Description=Run No-IP Multi-WAN Monitor every minute
 
 [Timer]
 OnBootSec=30s

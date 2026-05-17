@@ -1,7 +1,8 @@
-# noip-dualwan-monitor gitignore
+# noip-multiwan-monitor gitignore
 # Author: Rubem Swensson
 # Co-Authors: ChatGPT + Codex
 # Changelog:
+# - 2026-05-17: Renamed visible project references to multi-WAN.
 # - 2026-05-17: Initial ignore rules.
 
 __pycache__/

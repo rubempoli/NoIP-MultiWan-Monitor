@@ -85,7 +85,7 @@ def read_tail(path: Path, lines: int) -> list[str]:
 
 
 class NoIpHandler(BaseHTTPRequestHandler):
-    server_version = "NoIpDualWanMonitor/0.1.0"
+    server_version = "NoIpMultiWanMonitor/0.1.0"
 
     def log_message(self, format: str, *args: object) -> None:
         return
