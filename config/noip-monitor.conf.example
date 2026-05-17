@@ -1,0 +1,38 @@
+# noip-dualwan-monitor configuration example
+# Author: Rubem Swensson
+# Co-Authors: ChatGPT + Codex
+# Changelog:
+# - 2026-05-17: Initial public configuration template.
+
+# Hostname managed by No-IP/DDNS.
+NOIP_HOSTNAME="realswensson.ddns.net"
+
+# Runtime files.
+STATUS_DIR="/var/lib/noip"
+STATUS_FILE="${STATUS_DIR}/status.txt"
+HISTORY_FILE="${STATUS_DIR}/history.log"
+
+# External IP providers are tried in order. Keep the list small and reliable.
+PUBLIC_IP_ENDPOINTS="http://ip1.dynupdate.no-ip.com:8245 https://api.ipify.org"
+PUBLIC_IP_TIMEOUT_SECONDS="10"
+
+# DNS resolver used to check the IP currently published for NOIP_HOSTNAME.
+DNS_RESOLVER="1.1.1.1"
+
+# Optional conservative ISP detection by observed IPv4 prefixes.
+# Format: ISP=prefix1,prefix2;ISP=prefix3
+# Leave empty until you have collected stable prefixes from each WAN.
+ISP_PREFIX_RULES="Claro=187.59.;Vivo=179."
+UNKNOWN_ISP_LABEL="unknown"
+
+# DUC restart integration is intentionally disabled by default.
+ENABLE_DUC_RESTART="false"
+DUC_SERVICE_NAME="noip-duc.service"
+DUC_ENV_FILE="/etc/noip-duc.env"
+DUC_BINARY="/usr/bin/noip-duc"
+
+# Local API settings.
+API_BIND_HOST="0.0.0.0"
+API_PORT="8085"
+API_HISTORY_DEFAULT_LINES="50"
+API_HISTORY_MAX_LINES="500"

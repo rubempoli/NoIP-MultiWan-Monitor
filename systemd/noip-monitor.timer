@@ -1,0 +1,18 @@
+# noip-dualwan-monitor systemd timer
+# Author: Rubem Swensson
+# Co-Authors: ChatGPT + Codex
+# Changelog:
+# - 2026-05-17: Initial one-minute timer.
+
+[Unit]
+Description=Run No-IP Dual-WAN Monitor every minute
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=1min
+AccuracySec=10s
+Unit=noip-monitor.service
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,29 @@
+# No-IP DUC integration example
+# Author: Rubem Swensson
+# Co-Authors: ChatGPT + Codex
+# Changelog:
+# - 2026-05-17: Initial example preserving DUC ownership while integrating the consolidated hook.
+
+[Unit]
+Description=No-IP Dynamic Update Client (DUC 3.x)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Reuse the existing No-IP DUC secrets/environment file. Do not copy it into this repository.
+EnvironmentFile=/etc/noip-duc.env
+Environment=NOIP_MONITOR_CONFIG=/etc/noip-monitor.conf
+ExecStart=/usr/bin/noip-duc --exec-on-change "/usr/local/bin/noip-update-hook.sh"
+ExecStartPost=/usr/local/bin/noip-write-status.sh
+Restart=always
+RestartSec=30
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/lib/noip
+
+[Install]
+WantedBy=multi-user.target

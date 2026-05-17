@@ -1,0 +1,11 @@
+# noip-dualwan-monitor gitignore
+# Author: Rubem Swensson
+# Co-Authors: ChatGPT + Codex
+# Changelog:
+# - 2026-05-17: Initial ignore rules.
+
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+*.log
