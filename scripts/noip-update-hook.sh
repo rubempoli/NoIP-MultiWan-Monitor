@@ -3,6 +3,7 @@
 # Author: Rubem Swensson
 # Co-Authors: ChatGPT + Codex
 # Changelog:
+# - 2026-05-17: Preserved consolidated previous public IP when DUC LAST_IP is empty or invalid.
 # - 2026-05-17: Refactored hook to update consolidated status and append audit history.
 
 set -euo pipefail
@@ -53,7 +54,8 @@ main() {
 
   local hook_time
   local duc_previous_ip
-  local file_previous_ip
+  local consolidated_previous_ip
+  local current_status_ip
   local previous_public_ip
   local published_dns_ip
   local dns_status
@@ -66,11 +68,16 @@ main() {
 
   hook_time="$(now_iso)"
   duc_previous_ip="${LAST_IP:-unknown}"
-  file_previous_ip="$(status_value "CURRENT_PUBLIC_IP" "$(status_value "CURRENT_IP" "unknown")")"
+  consolidated_previous_ip="$(status_value "PREVIOUS_PUBLIC_IP" "unknown")"
+  current_status_ip="$(status_value "CURRENT_PUBLIC_IP" "$(status_value "CURRENT_IP" "unknown")")"
   previous_public_ip="$duc_previous_ip"
 
   if [[ -z "$previous_public_ip" || "$previous_public_ip" == "unknown" || "$previous_public_ip" == "0.0.0.0" ]]; then
-    previous_public_ip="$file_previous_ip"
+    previous_public_ip="$consolidated_previous_ip"
+  fi
+
+  if [[ -z "$previous_public_ip" || "$previous_public_ip" == "unknown" ]]; then
+    previous_public_ip="$current_status_ip"
   fi
 
   published_dns_ip="$(status_value "PUBLISHED_DNS_IP" "unknown")"

@@ -5,6 +5,7 @@ Co-Authors: ChatGPT + Codex
 
 ## 0.1.0 - 2026-05-17
 
+- Preserved consolidated previous public IP in DUC hook updates.
 - Preserved previous public IP and ISP as the last different network state.
 - Persisted status before optional DUC restart to avoid reentrant duplicate IP change events.
 - Added DNS-based public IP detection fallback.
