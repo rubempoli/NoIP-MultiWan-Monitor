@@ -31,7 +31,13 @@ The project keeps the current ideas that already work:
 
    ```bash
    NOIP_HOSTNAME="realswensson.ddns.net"
-   ISP_PREFIX_RULES="Claro=187.59.;Vivo=179."
+   ISP_DETECTION_METHODS="known_isp_names,whois"
+   KNOWN_ISP_NAMES_FILE="/var/lib/noip/known-isp-names.conf"
+   ENABLE_WHOIS_KNOWN_ISP_NAMES_CACHE="true"
+   ISP_PREFIX_RULES=""
+   WHOIS_COMMAND="whois"
+   WHOIS_TIMEOUT_SECONDS="15"
+   WHOIS_ISP_RULES="Vivo=TELEFONICA,TELEF,GVT,AS18881;Claro=CLARO,NET SERVICOS,EMBRATEL,AS28573"
    ENABLE_DUC_RESTART="false"
    DUC_ENV_FILE="/etc/noip-duc.env"
    DUC_BINARY="/usr/bin/noip-duc"
@@ -48,6 +54,7 @@ The project keeps the current ideas that already work:
 5. Validate the API:
 
    ```bash
+   sudo systemctl restart noip-api.service
    curl http://127.0.0.1:8085/noip
    curl http://127.0.0.1:8085/noip.json
    ```

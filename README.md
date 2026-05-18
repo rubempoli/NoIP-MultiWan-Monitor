@@ -5,6 +5,9 @@ Co-Authors: ChatGPT + Codex
 
 ## Changelog
 
+- 2026-05-17: Added known ISP names cache for ISP detection before WHOIS lookup.
+- 2026-05-17: Made WHOIS ISP matching tolerant of accent and encoding differences.
+- 2026-05-17: Added optional WHOIS-based ISP detection fallback.
 - 2026-05-17: Renamed visible project references to multi-WAN.
 - 2026-05-17: Initial GitHub-ready project structure, monitor, API, systemd units, installer, and documentation.
 

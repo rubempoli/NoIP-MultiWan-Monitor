@@ -2,6 +2,9 @@
 # Author: Rubem Swensson
 # Co-Authors: ChatGPT + Codex
 # Changelog:
+# - 2026-05-17: Added known ISP names cache for ISP detection before WHOIS lookup.
+# - 2026-05-17: Made WHOIS ISP matching tolerant of accent and encoding differences.
+# - 2026-05-17: Added optional WHOIS-based ISP detection fallback.
 # - 2026-05-17: Renamed visible project references to multi-WAN.
 # - 2026-05-17: Initial public configuration template.
 
@@ -12,6 +15,7 @@ NOIP_HOSTNAME="realswensson.ddns.net"
 STATUS_DIR="/var/lib/noip"
 STATUS_FILE="${STATUS_DIR}/status.txt"
 HISTORY_FILE="${STATUS_DIR}/history.log"
+KNOWN_ISP_NAMES_FILE="${STATUS_DIR}/known-isp-names.conf"
 
 # External IP providers are tried in order. Keep the list small and reliable.
 PUBLIC_IP_ENDPOINTS="http://ip1.dynupdate.no-ip.com:8245 https://api.ipify.org"
@@ -20,10 +24,25 @@ PUBLIC_IP_TIMEOUT_SECONDS="10"
 # DNS resolver used to check the IP currently published for NOIP_HOSTNAME.
 DNS_RESOLVER="1.1.1.1"
 
-# Optional conservative ISP detection by observed IPv4 prefixes.
+# Optional conservative ISP detection.
+# Methods are tried in order. WHOIS should be used after local methods.
+ISP_DETECTION_METHODS="known_isp_names,whois"
+
+# Local learned IP-to-ISP map. Format: IP=ISP
+# Example: 187.59.12.49=Vivo
+ENABLE_WHOIS_KNOWN_ISP_NAMES_CACHE="true"
+
+# Optional ISP detection by observed IPv4 prefixes.
 # Format: ISP=prefix1,prefix2;ISP=prefix3
-# Leave empty until you have collected stable prefixes from each WAN.
-ISP_PREFIX_RULES="Claro=187.59.;Vivo=179."
+# Leave empty unless you want prefix rules before WHOIS.
+ISP_PREFIX_RULES=""
+
+# Optional ISP detection by WHOIS text match.
+# Format: ISP=token1,token2;ISP=token3
+# Use ASCII tokens broad enough to survive accents and terminal encoding differences.
+WHOIS_COMMAND="whois"
+WHOIS_TIMEOUT_SECONDS="15"
+WHOIS_ISP_RULES="Vivo=TELEFONICA,TELEF,GVT,AS18881;Claro=CLARO,NET SERVICOS,EMBRATEL,AS28573"
 UNKNOWN_ISP_LABEL="unknown"
 
 # DUC restart integration is intentionally disabled by default.

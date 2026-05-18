@@ -3,6 +3,9 @@
 # Author: Rubem Swensson
 # Co-Authors: ChatGPT + Codex
 # Changelog:
+# - 2026-05-17: Added known ISP names cache for ISP detection before WHOIS lookup.
+# - 2026-05-17: Made WHOIS ISP matching tolerant of accent and encoding differences.
+# - 2026-05-17: Added optional WHOIS-based ISP detection fallback.
 # - 2026-05-17: Renamed visible project references to multi-WAN.
 # - 2026-05-17: Initial monitor with public IP, DNS consistency, ISP detection, history, and optional DUC restart.
 
@@ -14,10 +17,16 @@ NOIP_HOSTNAME="${NOIP_HOSTNAME:-realswensson.ddns.net}"
 STATUS_DIR="${STATUS_DIR:-/var/lib/noip}"
 STATUS_FILE="${STATUS_FILE:-${STATUS_DIR}/status.txt}"
 HISTORY_FILE="${HISTORY_FILE:-${STATUS_DIR}/history.log}"
+KNOWN_ISP_NAMES_FILE="${KNOWN_ISP_NAMES_FILE:-${STATUS_DIR}/known-isp-names.conf}"
 PUBLIC_IP_ENDPOINTS="${PUBLIC_IP_ENDPOINTS:-http://ip1.dynupdate.no-ip.com:8245 https://api.ipify.org}"
 PUBLIC_IP_TIMEOUT_SECONDS="${PUBLIC_IP_TIMEOUT_SECONDS:-10}"
 DNS_RESOLVER="${DNS_RESOLVER:-1.1.1.1}"
+ISP_DETECTION_METHODS="${ISP_DETECTION_METHODS:-known_isp_names,whois}"
+ENABLE_WHOIS_KNOWN_ISP_NAMES_CACHE="${ENABLE_WHOIS_KNOWN_ISP_NAMES_CACHE:-true}"
 ISP_PREFIX_RULES="${ISP_PREFIX_RULES:-}"
+WHOIS_COMMAND="${WHOIS_COMMAND:-whois}"
+WHOIS_TIMEOUT_SECONDS="${WHOIS_TIMEOUT_SECONDS:-15}"
+WHOIS_ISP_RULES="${WHOIS_ISP_RULES:-}"
 UNKNOWN_ISP_LABEL="${UNKNOWN_ISP_LABEL:-unknown}"
 ENABLE_DUC_RESTART="${ENABLE_DUC_RESTART:-false}"
 DUC_SERVICE_NAME="${DUC_SERVICE_NAME:-noip-duc.service}"
@@ -88,7 +97,7 @@ get_published_dns_ip() {
   return 1
 }
 
-detect_isp() {
+match_prefix_isp() {
   local ip_address="$1"
   local rule
   local provider
@@ -112,6 +121,112 @@ detect_isp() {
     done
   done
 
+  return 1
+}
+
+match_known_isp_name() {
+  local ip_address="$1"
+  local known_isp
+
+  [[ -f "$KNOWN_ISP_NAMES_FILE" ]] || return 1
+  known_isp="$(awk -F= -v ip="$ip_address" '$1 == ip {print substr($0, length($1) + 2); exit}' "$KNOWN_ISP_NAMES_FILE" || true)"
+  [[ -n "$known_isp" ]] || return 1
+
+  printf '%s\n' "$known_isp"
+}
+
+save_known_isp_name() {
+  local ip_address="$1"
+  local isp_name="$2"
+  local event_time
+
+  if [[ "${ENABLE_WHOIS_KNOWN_ISP_NAMES_CACHE,,}" != "true" ]]; then
+    return 0
+  fi
+  if [[ -z "$isp_name" || "$isp_name" == "$UNKNOWN_ISP_LABEL" ]]; then
+    return 0
+  fi
+  if [[ -f "$KNOWN_ISP_NAMES_FILE" ]] && awk -F= -v ip="$ip_address" '$1 == ip {found=1} END {exit !found}' "$KNOWN_ISP_NAMES_FILE"; then
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$KNOWN_ISP_NAMES_FILE")"
+  printf '%s=%s\n' "$ip_address" "$isp_name" >> "$KNOWN_ISP_NAMES_FILE"
+  chmod 0644 "$KNOWN_ISP_NAMES_FILE"
+
+  event_time="$(now_iso)"
+  append_history "$event_time" "KNOWN_ISP_NAME_LEARNED" "IP=${ip_address}" "ISP=${isp_name}" "SOURCE=whois"
+}
+
+match_whois_isp() {
+  local ip_address="$1"
+  local whois_text
+  local normalized_whois_text
+  local rule
+  local provider
+  local tokens
+  local token
+  local -a rules
+  local -a token_list
+
+  if ! command -v "$WHOIS_COMMAND" >/dev/null 2>&1; then
+    return 1
+  fi
+
+  whois_text="$(timeout "$WHOIS_TIMEOUT_SECONDS" "$WHOIS_COMMAND" "$ip_address" 2>/dev/null || true)"
+  [[ -z "$whois_text" ]] && return 1
+  normalized_whois_text="$(printf '%s\n' "$whois_text" | iconv -f UTF-8 -t ASCII//TRANSLIT//IGNORE 2>/dev/null || printf '%s\n' "$whois_text")"
+
+  IFS=';' read -ra rules <<< "$WHOIS_ISP_RULES"
+  for rule in "${rules[@]}"; do
+    [[ -z "$rule" || "$rule" != *=* ]] && continue
+    provider="${rule%%=*}"
+    tokens="${rule#*=}"
+    IFS=',' read -ra token_list <<< "$tokens"
+    for token in "${token_list[@]}"; do
+      [[ -z "$token" ]] && continue
+      if printf '%s\n' "$normalized_whois_text" | grep -qiF "$token"; then
+        printf '%s\n' "$provider"
+        return 0
+      fi
+    done
+  done
+
+  return 1
+}
+
+detect_isp() {
+  local ip_address="$1"
+  local previous_ip="$2"
+  local previous_isp="$3"
+  local method
+  local detected_isp
+  local -a methods
+
+  IFS=',' read -ra methods <<< "$ISP_DETECTION_METHODS"
+  for method in "${methods[@]}"; do
+    method="${method//[[:space:]]/}"
+    case "$method" in
+      known_isp_names)
+        detected_isp="$(match_known_isp_name "$ip_address" || true)"
+        ;;
+      prefix)
+        detected_isp="$(match_prefix_isp "$ip_address" || true)"
+        ;;
+      whois)
+        detected_isp="$(match_whois_isp "$ip_address" || true)"
+        save_known_isp_name "$ip_address" "$detected_isp"
+        ;;
+      *)
+        detected_isp=""
+        ;;
+    esac
+
+    if [[ -n "$detected_isp" ]]; then
+      printf '%s\n' "$detected_isp"
+      return 0
+    fi
+  done
   printf '%s\n' "$UNKNOWN_ISP_LABEL"
 }
 
@@ -137,9 +252,13 @@ maybe_restart_duc() {
 main() {
   require_command curl
   require_command dig
+  require_command awk
+  require_command iconv
+  require_command timeout
 
   mkdir -p "$STATUS_DIR"
   touch "$HISTORY_FILE"
+  touch "$KNOWN_ISP_NAMES_FILE"
 
   local check_time
   local current_public_ip
@@ -161,11 +280,10 @@ main() {
     exit 1
   }
 
-  published_dns_ip="$(get_published_dns_ip || true)"
-  current_isp="$(detect_isp "$current_public_ip")"
-
   previous_public_ip="$(status_value "CURRENT_PUBLIC_IP" "$(status_value "CURRENT_IP" "unknown")")"
   previous_isp="$(status_value "CURRENT_ISP" "$UNKNOWN_ISP_LABEL")"
+  published_dns_ip="$(get_published_dns_ip || true)"
+  current_isp="$(detect_isp "$current_public_ip" "$previous_public_ip" "$previous_isp")"
   last_ip_change="$(status_value "LAST_IP_CHANGE" "")"
   last_duc_hook_update="$(status_value "LAST_DUC_HOOK_UPDATE" "")"
   last_duc_restart_trigger="$(status_value "LAST_DUC_RESTART_TRIGGER" "")"

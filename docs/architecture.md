@@ -5,6 +5,9 @@ Co-Authors: ChatGPT + Codex
 
 ## Changelog
 
+- 2026-05-17: Added known ISP names cache for ISP detection before WHOIS lookup.
+- 2026-05-17: Documented accent and encoding tolerance for WHOIS ISP matching.
+- 2026-05-17: Added optional WHOIS-based ISP detection fallback.
 - 2026-05-17: Initial architecture document.
 
 ## Design
@@ -22,7 +25,7 @@ The monitor separates two facts that are often mixed together:
 
 ## Components
 
-`scripts/noip-monitor.sh` runs through `noip-monitor.timer`. It reads `/etc/noip-monitor.conf`, detects the current public IP, resolves DNS, detects the ISP from configured prefixes, writes the status file atomically, and appends significant events to history.
+`scripts/noip-monitor.sh` runs through `noip-monitor.timer`. It reads `/etc/noip-monitor.conf`, detects the current public IP, resolves DNS, detects the ISP from configured rules, writes the status file atomically, and appends significant events to history.
 
 `api/noip-api.py` is a dependency-light HTTP API for Home Assistant and troubleshooting. It does not perform checks itself; it only reads monitor output.
 
@@ -44,13 +47,32 @@ The monitor reads public network state and DNS state. It does not need No-IP cre
 
 ## ISP Detection
 
-ISP detection uses conservative configured IPv4 prefixes:
+ISP detection uses configured methods in order:
 
 ```bash
-ISP_PREFIX_RULES="Claro=187.59.;Vivo=179."
+ISP_DETECTION_METHODS="known_isp_names,whois"
+KNOWN_ISP_NAMES_FILE="/var/lib/noip/known-isp-names.conf"
+WHOIS_ISP_RULES="Vivo=TELEFONICA,TELEF,GVT,AS18881;Claro=CLARO,NET SERVICOS,EMBRATEL,AS28573"
 ```
 
-This is intentionally local and cheap. If the observed prefixes are not stable enough, leave the rule empty and collect history before enabling labels.
+Known ISP names are tried first because they are local, cheap, and auditable. The file uses simple `IP=ISP` lines:
+
+```text
+187.59.12.49=Vivo
+```
+
+When an IP is not found locally, WHOIS is used as a fallback. If WHOIS maps the IP to a configured provider label, the monitor appends the learned mapping to `KNOWN_ISP_NAMES_FILE` and records a `KNOWN_ISP_NAME_LEARNED` history event.
+
+Prefix matching remains available as an optional method if you want coarse rules before WHOIS:
+
+```bash
+ISP_DETECTION_METHODS="known_isp_names,prefix,whois"
+ISP_PREFIX_RULES="Vivo=187.59.,179.;Claro="
+```
+
+WHOIS matching normalizes text toward ASCII with `iconv` when available. Tokens should still stay broad and ASCII-only to survive encoding differences. For example, `TELEF` matches both `TELEFONICA` and accent-damaged variants returned by some terminals.
+
+The monitor never writes raw WHOIS output to status or history. It only writes the configured provider label, such as `Vivo` or `Claro`.
 
 ## Optional DUC Restart
 

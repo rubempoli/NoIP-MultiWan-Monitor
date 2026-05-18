@@ -5,6 +5,10 @@ Co-Authors: ChatGPT + Codex
 
 ## 0.1.0 - 2026-05-17
 
+- Added known ISP names cache for ISP detection before WHOIS lookup.
+- Made WHOIS ISP matching tolerant of accent and encoding differences.
+- Added optional WHOIS-based ISP detection fallback.
+- Updated installer to restart the API service after installing new code.
 - Renamed visible project references to multi-WAN.
 - Created initial GitHub-ready project structure.
 - Added configurable periodic monitor.

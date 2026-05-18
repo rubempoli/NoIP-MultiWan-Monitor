@@ -3,6 +3,7 @@
 # Author: Rubem Swensson
 # Co-Authors: ChatGPT + Codex
 # Changelog:
+# - 2026-05-17: Added known ISP names cache file creation.
 # - 2026-05-17: Renamed visible project references to multi-WAN.
 # - 2026-05-17: Initial installer with backups and no blind overwrite of existing runtime files.
 
@@ -15,6 +16,7 @@ BIN_DIR="${BIN_DIR:-/usr/local/bin}"
 SYSTEMD_DIR="${SYSTEMD_DIR:-/etc/systemd/system}"
 STATUS_DIR="${STATUS_DIR:-/var/lib/noip}"
 DUC_ENV_FILE="${DUC_ENV_FILE:-/etc/noip-duc.env}"
+KNOWN_ISP_NAMES_FILE="${KNOWN_ISP_NAMES_FILE:-${STATUS_DIR}/known-isp-names.conf}"
 BACKUP_SUFFIX="$(date +%Y%m%d%H%M%S)"
 
 require_root() {
@@ -42,6 +44,8 @@ main() {
   install -d -m 0755 "$STATUS_DIR"
   touch "${STATUS_DIR}/history.log"
   chmod 0644 "${STATUS_DIR}/history.log"
+  touch "$KNOWN_ISP_NAMES_FILE"
+  chmod 0644 "$KNOWN_ISP_NAMES_FILE"
 
   if [[ ! -f "$CONFIG_TARGET" ]]; then
     install_file "$CONFIG_SOURCE" "$CONFIG_TARGET" 0644
@@ -62,7 +66,8 @@ main() {
 
   systemctl daemon-reload
   systemctl enable --now noip-monitor.timer
-  systemctl enable --now noip-api.service
+  systemctl enable noip-api.service
+  systemctl restart noip-api.service
 
   echo "INFO: Installation complete."
   if [[ -f "$DUC_ENV_FILE" ]]; then
