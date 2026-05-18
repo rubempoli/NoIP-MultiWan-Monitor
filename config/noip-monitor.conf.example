@@ -2,6 +2,7 @@
 # Author: Rubem Swensson
 # Co-Authors: ChatGPT + Codex
 # Changelog:
+# - 2026-05-17: Added DNS-based public IP detection fallback.
 # - 2026-05-17: Added known ISP names cache for ISP detection before WHOIS lookup.
 # - 2026-05-17: Made WHOIS ISP matching tolerant of accent and encoding differences.
 # - 2026-05-17: Added optional WHOIS-based ISP detection fallback.
@@ -20,6 +21,11 @@ KNOWN_ISP_NAMES_FILE="${STATUS_DIR}/known-isp-names.conf"
 # External IP providers are tried in order. Keep the list small and reliable.
 PUBLIC_IP_ENDPOINTS="http://ip1.dynupdate.no-ip.com:8245 https://api.ipify.org"
 PUBLIC_IP_TIMEOUT_SECONDS="10"
+
+# DNS-based public IP providers are tried after HTTP providers.
+# Format: query_name@resolver_ip
+PUBLIC_IP_DNS_QUERIES="myip.opendns.com@208.67.222.222"
+PUBLIC_IP_DNS_TIMEOUT_SECONDS="10"
 
 # DNS resolver used to check the IP currently published for NOIP_HOSTNAME.
 DNS_RESOLVER="1.1.1.1"

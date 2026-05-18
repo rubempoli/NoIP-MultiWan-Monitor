@@ -31,6 +31,8 @@ The project keeps the current ideas that already work:
 
    ```bash
    NOIP_HOSTNAME="realswensson.ddns.net"
+   PUBLIC_IP_DNS_QUERIES="myip.opendns.com@208.67.222.222"
+   PUBLIC_IP_DNS_TIMEOUT_SECONDS="10"
    ISP_DETECTION_METHODS="known_isp_names,whois"
    KNOWN_ISP_NAMES_FILE="/var/lib/noip/known-isp-names.conf"
    ENABLE_WHOIS_KNOWN_ISP_NAMES_CACHE="true"
@@ -59,7 +61,19 @@ The project keeps the current ideas that already work:
    curl http://127.0.0.1:8085/noip.json
    ```
 
-6. Integrate DUC after the monitor is validated. Keep the existing secrets file in place, usually `/etc/noip-duc.env`. Compare the current unit with `systemd/noip-duc.service.example` and add only the hook/status lines needed:
+6. Validate AppHost DNS and routing during WAN failover:
+
+   ```bash
+   ip route
+   cat /etc/resolv.conf
+   ping -c 3 1.1.1.1
+   nslookup ip1.dynupdate.no-ip.com
+   dig +short myip.opendns.com @208.67.222.222
+   ```
+
+   The monitor can fall back to DNS-based public IP detection, but the host should still have a valid resolver such as the local Omada gateway or stable public DNS servers.
+
+7. Integrate DUC after the monitor is validated. Keep the existing secrets file in place, usually `/etc/noip-duc.env`. Compare the current unit with `systemd/noip-duc.service.example` and add only the hook/status lines needed:
 
    ```ini
    EnvironmentFile=/etc/noip-duc.env
@@ -70,7 +84,7 @@ The project keeps the current ideas that already work:
 
    Do not copy No-IP credentials into this repository.
 
-7. Keep `ENABLE_DUC_RESTART=false` until DNS consistency and history behavior are trusted during real failover.
+8. Keep `ENABLE_DUC_RESTART=false` until DNS consistency and history behavior are trusted during real failover.
 
 ## Rollback Notes
 

@@ -3,6 +3,7 @@
 # Author: Rubem Swensson
 # Co-Authors: ChatGPT + Codex
 # Changelog:
+# - 2026-05-17: Added DNS-based public IP detection fallback.
 # - 2026-05-17: Added known ISP names cache for ISP detection before WHOIS lookup.
 # - 2026-05-17: Made WHOIS ISP matching tolerant of accent and encoding differences.
 # - 2026-05-17: Added optional WHOIS-based ISP detection fallback.
@@ -20,6 +21,8 @@ HISTORY_FILE="${HISTORY_FILE:-${STATUS_DIR}/history.log}"
 KNOWN_ISP_NAMES_FILE="${KNOWN_ISP_NAMES_FILE:-${STATUS_DIR}/known-isp-names.conf}"
 PUBLIC_IP_ENDPOINTS="${PUBLIC_IP_ENDPOINTS:-http://ip1.dynupdate.no-ip.com:8245 https://api.ipify.org}"
 PUBLIC_IP_TIMEOUT_SECONDS="${PUBLIC_IP_TIMEOUT_SECONDS:-10}"
+PUBLIC_IP_DNS_QUERIES="${PUBLIC_IP_DNS_QUERIES:-myip.opendns.com@208.67.222.222}"
+PUBLIC_IP_DNS_TIMEOUT_SECONDS="${PUBLIC_IP_DNS_TIMEOUT_SECONDS:-10}"
 DNS_RESOLVER="${DNS_RESOLVER:-1.1.1.1}"
 ISP_DETECTION_METHODS="${ISP_DETECTION_METHODS:-known_isp_names,whois}"
 ENABLE_WHOIS_KNOWN_ISP_NAMES_CACHE="${ENABLE_WHOIS_KNOWN_ISP_NAMES_CACHE:-true}"
@@ -77,6 +80,9 @@ append_history() {
 get_public_ip() {
   local endpoint
   local response
+  local dns_query
+  local query_name
+  local resolver_ip
   for endpoint in $PUBLIC_IP_ENDPOINTS; do
     response="$(curl -fsS --max-time "$PUBLIC_IP_TIMEOUT_SECONDS" "$endpoint" 2>/dev/null | tr -d '[:space:]' || true)"
     if is_ipv4 "$response"; then
@@ -84,6 +90,18 @@ get_public_ip() {
       return 0
     fi
   done
+
+  for dns_query in $PUBLIC_IP_DNS_QUERIES; do
+    [[ "$dns_query" == *@* ]] || continue
+    query_name="${dns_query%@*}"
+    resolver_ip="${dns_query#*@}"
+    response="$(dig +time="$PUBLIC_IP_DNS_TIMEOUT_SECONDS" +tries=1 +short "$query_name" @"$resolver_ip" | grep -m1 -E '^([0-9]{1,3}\.){3}[0-9]{1,3}$' || true)"
+    if is_ipv4 "$response"; then
+      printf '%s\n' "$response"
+      return 0
+    fi
+  done
+
   return 1
 }
 

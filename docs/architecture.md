@@ -5,6 +5,7 @@ Co-Authors: ChatGPT + Codex
 
 ## Changelog
 
+- 2026-05-17: Added DNS-based public IP detection fallback.
 - 2026-05-17: Added known ISP names cache for ISP detection before WHOIS lookup.
 - 2026-05-17: Documented accent and encoding tolerance for WHOIS ISP matching.
 - 2026-05-17: Added optional WHOIS-based ISP detection fallback.
@@ -16,6 +17,14 @@ The monitor separates two facts that are often mixed together:
 
 - `CURRENT_PUBLIC_IP`: the public IP observed from the current outbound route.
 - `PUBLISHED_DNS_IP`: the IP returned by DNS for the configured No-IP hostname.
+
+`CURRENT_PUBLIC_IP` is detected through configured HTTP endpoints first, then through DNS-based fallback queries such as:
+
+```bash
+PUBLIC_IP_DNS_QUERIES="myip.opendns.com@208.67.222.222"
+```
+
+This keeps failover detection working even when local DNS is unhealthy or slow during a WAN transition.
 
 `DNS_STATUS` is derived from those values:
 
