@@ -3,6 +3,7 @@
 # Author: Rubem Swensson
 # Co-Authors: ChatGPT + Codex
 # Changelog:
+# - 2026-05-17: Persisted status before optional DUC restart to avoid reentrant duplicate IP_CHANGE events.
 # - 2026-05-17: Added DNS-based public IP detection fallback.
 # - 2026-05-17: Added known ISP names cache for ISP detection before WHOIS lookup.
 # - 2026-05-17: Made WHOIS ISP matching tolerant of accent and encoding differences.
@@ -288,6 +289,7 @@ main() {
   local last_ip_change
   local last_duc_hook_update
   local last_duc_restart_trigger
+  local should_restart_duc="false"
   local dns_event_state
   local previous_dns_status
 
@@ -320,8 +322,8 @@ main() {
     last_ip_change="$check_time"
     append_history "$check_time" "IP_CHANGE" "ISP=${current_isp}" "OLD_IP=${previous_public_ip}" "NEW_IP=${current_public_ip}" "PREVIOUS_ISP=${previous_isp}"
     if [[ "${ENABLE_DUC_RESTART,,}" == "true" ]]; then
-      maybe_restart_duc "$check_time"
       last_duc_restart_trigger="$check_time"
+      should_restart_duc="true"
     fi
   elif [[ -z "$last_ip_change" ]]; then
     last_ip_change="$check_time"
@@ -345,6 +347,10 @@ LAST_IP_CHANGE=${last_ip_change}
 LAST_DUC_HOOK_UPDATE=${last_duc_hook_update}
 LAST_DUC_RESTART_TRIGGER=${last_duc_restart_trigger}
 EOF
+
+  if [[ "$should_restart_duc" == "true" ]]; then
+    maybe_restart_duc "$check_time"
+  fi
 }
 
 main "$@"

@@ -5,6 +5,7 @@ Co-Authors: ChatGPT + Codex
 
 ## 0.1.0 - 2026-05-17
 
+- Persisted status before optional DUC restart to avoid reentrant duplicate IP change events.
 - Added DNS-based public IP detection fallback.
 - Added known ISP names cache for ISP detection before WHOIS lookup.
 - Made WHOIS ISP matching tolerant of accent and encoding differences.
