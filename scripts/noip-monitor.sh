@@ -3,6 +3,7 @@
 # Author: Rubem Swensson
 # Co-Authors: ChatGPT + Codex
 # Changelog:
+# - 2026-05-17: Preserved previous public IP and ISP as the last different network state.
 # - 2026-05-17: Persisted status before optional DUC restart to avoid reentrant duplicate IP_CHANGE events.
 # - 2026-05-17: Added DNS-based public IP detection fallback.
 # - 2026-05-17: Added known ISP names cache for ISP detection before WHOIS lookup.
@@ -284,6 +285,8 @@ main() {
   local published_dns_ip
   local dns_status
   local current_isp
+  local prior_public_ip
+  local prior_isp
   local previous_public_ip
   local previous_isp
   local last_ip_change
@@ -300,10 +303,12 @@ main() {
     exit 1
   }
 
-  previous_public_ip="$(status_value "CURRENT_PUBLIC_IP" "$(status_value "CURRENT_IP" "unknown")")"
-  previous_isp="$(status_value "CURRENT_ISP" "$UNKNOWN_ISP_LABEL")"
+  prior_public_ip="$(status_value "CURRENT_PUBLIC_IP" "$(status_value "CURRENT_IP" "unknown")")"
+  prior_isp="$(status_value "CURRENT_ISP" "$UNKNOWN_ISP_LABEL")"
+  previous_public_ip="$(status_value "PREVIOUS_PUBLIC_IP" "unknown")"
+  previous_isp="$(status_value "PREVIOUS_ISP" "$UNKNOWN_ISP_LABEL")"
   published_dns_ip="$(get_published_dns_ip || true)"
-  current_isp="$(detect_isp "$current_public_ip" "$previous_public_ip" "$previous_isp")"
+  current_isp="$(detect_isp "$current_public_ip" "$prior_public_ip" "$prior_isp")"
   last_ip_change="$(status_value "LAST_IP_CHANGE" "")"
   last_duc_hook_update="$(status_value "LAST_DUC_HOOK_UPDATE" "")"
   last_duc_restart_trigger="$(status_value "LAST_DUC_RESTART_TRIGGER" "")"
@@ -318,8 +323,10 @@ main() {
     dns_status="DIVERGENT"
   fi
 
-  if [[ "$previous_public_ip" != "$current_public_ip" && "$previous_public_ip" != "unknown" && -n "$previous_public_ip" ]]; then
+  if [[ "$prior_public_ip" != "$current_public_ip" && "$prior_public_ip" != "unknown" && -n "$prior_public_ip" ]]; then
     last_ip_change="$check_time"
+    previous_public_ip="$prior_public_ip"
+    previous_isp="$prior_isp"
     append_history "$check_time" "IP_CHANGE" "ISP=${current_isp}" "OLD_IP=${previous_public_ip}" "NEW_IP=${current_public_ip}" "PREVIOUS_ISP=${previous_isp}"
     if [[ "${ENABLE_DUC_RESTART,,}" == "true" ]]; then
       last_duc_restart_trigger="$check_time"
