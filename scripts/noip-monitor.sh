@@ -3,6 +3,7 @@
 # Author: Rubem Swensson
 # Co-Authors: ChatGPT + Codex
 # Changelog:
+# - 2026-05-17: Added optional generic No-IP DDNS records for independent IP exposure.
 # - 2026-05-17: Preserved previous public IP and ISP as the last different network state.
 # - 2026-05-17: Persisted status before optional DUC restart to avoid reentrant duplicate IP_CHANGE events.
 # - 2026-05-17: Added DNS-based public IP detection fallback.
@@ -26,6 +27,13 @@ PUBLIC_IP_TIMEOUT_SECONDS="${PUBLIC_IP_TIMEOUT_SECONDS:-10}"
 PUBLIC_IP_DNS_QUERIES="${PUBLIC_IP_DNS_QUERIES:-myip.opendns.com@208.67.222.222}"
 PUBLIC_IP_DNS_TIMEOUT_SECONDS="${PUBLIC_IP_DNS_TIMEOUT_SECONDS:-10}"
 DNS_RESOLVER="${DNS_RESOLVER:-1.1.1.1}"
+NOIP_DDNS_RESOLVER="${NOIP_DDNS_RESOLVER:-$DNS_RESOLVER}"
+NOIP_DDNS_01_NAME="${NOIP_DDNS_01_NAME:-primary}"
+NOIP_DDNS_01_HOSTNAME="${NOIP_DDNS_01_HOSTNAME:-$NOIP_HOSTNAME}"
+NOIP_DDNS_02_NAME="${NOIP_DDNS_02_NAME:-}"
+NOIP_DDNS_02_HOSTNAME="${NOIP_DDNS_02_HOSTNAME:-}"
+NOIP_DDNS_03_NAME="${NOIP_DDNS_03_NAME:-}"
+NOIP_DDNS_03_HOSTNAME="${NOIP_DDNS_03_HOSTNAME:-}"
 ISP_DETECTION_METHODS="${ISP_DETECTION_METHODS:-known_isp_names,whois}"
 ENABLE_WHOIS_KNOWN_ISP_NAMES_CACHE="${ENABLE_WHOIS_KNOWN_ISP_NAMES_CACHE:-true}"
 ISP_PREFIX_RULES="${ISP_PREFIX_RULES:-}"
@@ -115,6 +123,20 @@ get_published_dns_ip() {
     return 0
   fi
   return 1
+}
+
+resolve_optional_dns_ip() {
+  local hostname="$1"
+  local resolver="$2"
+  local dns_ip
+
+  if [[ -z "$hostname" ]]; then
+    printf '%s\n' "unknown"
+    return 0
+  fi
+
+  dns_ip="$(dig +short "$hostname" @"$resolver" | grep -m1 -E '^([0-9]{1,3}\.){3}[0-9]{1,3}$' || true)"
+  printf '%s\n' "${dns_ip:-unknown}"
 }
 
 match_prefix_isp() {
@@ -284,6 +306,9 @@ main() {
   local current_public_ip
   local published_dns_ip
   local dns_status
+  local noip_ddns_01_public_ip
+  local noip_ddns_02_public_ip
+  local noip_ddns_03_public_ip
   local current_isp
   local prior_public_ip
   local prior_isp
@@ -308,6 +333,9 @@ main() {
   previous_public_ip="$(status_value "PREVIOUS_PUBLIC_IP" "unknown")"
   previous_isp="$(status_value "PREVIOUS_ISP" "$UNKNOWN_ISP_LABEL")"
   published_dns_ip="$(get_published_dns_ip || true)"
+  noip_ddns_01_public_ip="$(resolve_optional_dns_ip "$NOIP_DDNS_01_HOSTNAME" "$NOIP_DDNS_RESOLVER")"
+  noip_ddns_02_public_ip="$(resolve_optional_dns_ip "$NOIP_DDNS_02_HOSTNAME" "$NOIP_DDNS_RESOLVER")"
+  noip_ddns_03_public_ip="$(resolve_optional_dns_ip "$NOIP_DDNS_03_HOSTNAME" "$NOIP_DDNS_RESOLVER")"
   current_isp="$(detect_isp "$current_public_ip" "$prior_public_ip" "$prior_isp")"
   last_ip_change="$(status_value "LAST_IP_CHANGE" "")"
   last_duc_hook_update="$(status_value "LAST_DUC_HOOK_UPDATE" "")"
@@ -346,6 +374,15 @@ HOSTNAME=${NOIP_HOSTNAME}
 CURRENT_PUBLIC_IP=${current_public_ip}
 PUBLISHED_DNS_IP=${published_dns_ip}
 DNS_STATUS=${dns_status}
+NOIP_DDNS_01_NAME=${NOIP_DDNS_01_NAME}
+NOIP_DDNS_01_HOSTNAME=${NOIP_DDNS_01_HOSTNAME}
+NOIP_DDNS_01_PUBLIC_IP=${noip_ddns_01_public_ip}
+NOIP_DDNS_02_NAME=${NOIP_DDNS_02_NAME}
+NOIP_DDNS_02_HOSTNAME=${NOIP_DDNS_02_HOSTNAME}
+NOIP_DDNS_02_PUBLIC_IP=${noip_ddns_02_public_ip}
+NOIP_DDNS_03_NAME=${NOIP_DDNS_03_NAME}
+NOIP_DDNS_03_HOSTNAME=${NOIP_DDNS_03_HOSTNAME}
+NOIP_DDNS_03_PUBLIC_IP=${noip_ddns_03_public_ip}
 CURRENT_ISP=${current_isp}
 PREVIOUS_PUBLIC_IP=${previous_public_ip}
 PREVIOUS_ISP=${previous_isp}

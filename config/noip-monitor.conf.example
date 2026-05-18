@@ -2,6 +2,7 @@
 # Author: Rubem Swensson
 # Co-Authors: ChatGPT + Codex
 # Changelog:
+# - 2026-05-17: Added optional generic No-IP DDNS records for independent IP exposure.
 # - 2026-05-17: Added DNS-based public IP detection fallback.
 # - 2026-05-17: Added known ISP names cache for ISP detection before WHOIS lookup.
 # - 2026-05-17: Made WHOIS ISP matching tolerant of accent and encoding differences.
@@ -29,6 +30,16 @@ PUBLIC_IP_DNS_TIMEOUT_SECONDS="10"
 
 # DNS resolver used to check the IP currently published for NOIP_HOSTNAME.
 DNS_RESOLVER="1.1.1.1"
+
+# Optional independent No-IP DDNS records.
+# These are useful when you want to expose each No-IP record independently.
+NOIP_DDNS_RESOLVER="${DNS_RESOLVER}"
+NOIP_DDNS_01_NAME="primary"
+NOIP_DDNS_01_HOSTNAME="realswensson.ddns.net"
+NOIP_DDNS_02_NAME="main"
+NOIP_DDNS_02_HOSTNAME="realswensson-main.ddns.net"
+NOIP_DDNS_03_NAME="backup"
+NOIP_DDNS_03_HOSTNAME="realswensson-bkp.ddns.net"
 
 # Optional conservative ISP detection.
 # Methods are tried in order. WHOIS should be used after local methods.

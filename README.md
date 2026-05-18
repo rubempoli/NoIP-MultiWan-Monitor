@@ -5,6 +5,7 @@ Co-Authors: ChatGPT + Codex
 
 ## Changelog
 
+- 2026-05-17: Added optional generic No-IP DDNS records for independent IP exposure.
 - 2026-05-17: Preserved consolidated previous public IP in DUC hook updates.
 - 2026-05-17: Preserved previous public IP and ISP as the last different network state.
 - 2026-05-17: Persisted status before optional DUC restart to avoid reentrant duplicate IP change events.
@@ -56,6 +57,15 @@ HOSTNAME=realswensson.ddns.net
 CURRENT_PUBLIC_IP=187.59.12.49
 PUBLISHED_DNS_IP=187.59.12.49
 DNS_STATUS=OK
+NOIP_DDNS_01_NAME=primary
+NOIP_DDNS_01_HOSTNAME=realswensson.ddns.net
+NOIP_DDNS_01_PUBLIC_IP=187.59.12.49
+NOIP_DDNS_02_NAME=main
+NOIP_DDNS_02_HOSTNAME=realswensson-main.ddns.net
+NOIP_DDNS_02_PUBLIC_IP=187.59.12.49
+NOIP_DDNS_03_NAME=backup
+NOIP_DDNS_03_HOSTNAME=realswensson-bkp.ddns.net
+NOIP_DDNS_03_PUBLIC_IP=189.101.176.64
 CURRENT_ISP=Claro
 PREVIOUS_PUBLIC_IP=179.x.x.x
 PREVIOUS_ISP=Vivo

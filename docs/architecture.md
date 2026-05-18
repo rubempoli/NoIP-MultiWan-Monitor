@@ -5,6 +5,7 @@ Co-Authors: ChatGPT + Codex
 
 ## Changelog
 
+- 2026-05-17: Added optional generic No-IP DDNS records for independent IP exposure.
 - 2026-05-17: Preserved consolidated previous public IP in DUC hook updates.
 - 2026-05-17: Preserved previous public IP and ISP as the last different network state.
 - 2026-05-17: Persisted status before optional DUC restart to avoid reentrant duplicate IP change events.
@@ -20,6 +21,7 @@ The monitor separates two facts that are often mixed together:
 
 - `CURRENT_PUBLIC_IP`: the public IP observed from the current outbound route.
 - `PUBLISHED_DNS_IP`: the IP returned by DNS for the configured No-IP hostname.
+- `NOIP_DDNS_01_PUBLIC_IP`, `NOIP_DDNS_02_PUBLIC_IP`, and `NOIP_DDNS_03_PUBLIC_IP`: optional independent No-IP DNS records, resolved separately from the main monitored hostname.
 
 `CURRENT_PUBLIC_IP` is detected through configured HTTP endpoints first, then through DNS-based fallback queries such as:
 
@@ -28,6 +30,19 @@ PUBLIC_IP_DNS_QUERIES="myip.opendns.com@208.67.222.222"
 ```
 
 This keeps failover detection working even when local DNS is unhealthy or slow during a WAN transition.
+
+Independent No-IP records can be configured and renamed:
+
+```bash
+NOIP_DDNS_01_NAME="primary"
+NOIP_DDNS_01_HOSTNAME="realswensson.ddns.net"
+NOIP_DDNS_02_NAME="main"
+NOIP_DDNS_02_HOSTNAME="realswensson-main.ddns.net"
+NOIP_DDNS_03_NAME="backup"
+NOIP_DDNS_03_HOSTNAME="realswensson-bkp.ddns.net"
+```
+
+These values are exposed in `/noip.json` even when the main monitored No-IP hostname currently points elsewhere.
 
 `DNS_STATUS` is derived from those values:
 

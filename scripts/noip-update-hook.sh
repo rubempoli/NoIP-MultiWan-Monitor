@@ -3,6 +3,7 @@
 # Author: Rubem Swensson
 # Co-Authors: ChatGPT + Codex
 # Changelog:
+# - 2026-05-17: Preserved generic No-IP DDNS status fields during DUC hook updates.
 # - 2026-05-17: Preserved consolidated previous public IP when DUC LAST_IP is empty or invalid.
 # - 2026-05-17: Refactored hook to update consolidated status and append audit history.
 
@@ -59,6 +60,15 @@ main() {
   local previous_public_ip
   local published_dns_ip
   local dns_status
+  local noip_ddns_01_name
+  local noip_ddns_01_hostname
+  local noip_ddns_01_public_ip
+  local noip_ddns_02_name
+  local noip_ddns_02_hostname
+  local noip_ddns_02_public_ip
+  local noip_ddns_03_name
+  local noip_ddns_03_hostname
+  local noip_ddns_03_public_ip
   local current_isp
   local previous_isp
   local last_check
@@ -82,6 +92,15 @@ main() {
 
   published_dns_ip="$(status_value "PUBLISHED_DNS_IP" "unknown")"
   dns_status="$(status_value "DNS_STATUS" "UNKNOWN")"
+  noip_ddns_01_name="$(status_value "NOIP_DDNS_01_NAME" "")"
+  noip_ddns_01_hostname="$(status_value "NOIP_DDNS_01_HOSTNAME" "")"
+  noip_ddns_01_public_ip="$(status_value "NOIP_DDNS_01_PUBLIC_IP" "unknown")"
+  noip_ddns_02_name="$(status_value "NOIP_DDNS_02_NAME" "")"
+  noip_ddns_02_hostname="$(status_value "NOIP_DDNS_02_HOSTNAME" "")"
+  noip_ddns_02_public_ip="$(status_value "NOIP_DDNS_02_PUBLIC_IP" "unknown")"
+  noip_ddns_03_name="$(status_value "NOIP_DDNS_03_NAME" "")"
+  noip_ddns_03_hostname="$(status_value "NOIP_DDNS_03_HOSTNAME" "")"
+  noip_ddns_03_public_ip="$(status_value "NOIP_DDNS_03_PUBLIC_IP" "unknown")"
   current_isp="$(status_value "CURRENT_ISP" "$UNKNOWN_ISP_LABEL")"
   previous_isp="$(status_value "PREVIOUS_ISP" "$UNKNOWN_ISP_LABEL")"
   last_check="$(status_value "LAST_CHECK" "$hook_time")"
@@ -96,6 +115,15 @@ HOSTNAME=${NOIP_HOSTNAME}
 CURRENT_PUBLIC_IP=${CURRENT_IP}
 PUBLISHED_DNS_IP=${published_dns_ip}
 DNS_STATUS=${dns_status}
+NOIP_DDNS_01_NAME=${noip_ddns_01_name}
+NOIP_DDNS_01_HOSTNAME=${noip_ddns_01_hostname}
+NOIP_DDNS_01_PUBLIC_IP=${noip_ddns_01_public_ip}
+NOIP_DDNS_02_NAME=${noip_ddns_02_name}
+NOIP_DDNS_02_HOSTNAME=${noip_ddns_02_hostname}
+NOIP_DDNS_02_PUBLIC_IP=${noip_ddns_02_public_ip}
+NOIP_DDNS_03_NAME=${noip_ddns_03_name}
+NOIP_DDNS_03_HOSTNAME=${noip_ddns_03_hostname}
+NOIP_DDNS_03_PUBLIC_IP=${noip_ddns_03_public_ip}
 CURRENT_ISP=${current_isp}
 PREVIOUS_PUBLIC_IP=${previous_public_ip}
 PREVIOUS_ISP=${previous_isp}
